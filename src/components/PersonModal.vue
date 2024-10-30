@@ -13,7 +13,7 @@ const props = defineProps({
 })
 
 onMounted(() => {
-  fetch('https://cdnapi.smotrim.ru/api/v1/persons/' + props.person.id, {
+  const infoPromise = fetch('https://cdnapi.smotrim.ru/api/v1/persons/' + props.person.id, {
     method: 'get',
     headers: { 'Content-type': 'application/json' },
   }).then((response) => {
@@ -27,20 +27,28 @@ onMounted(() => {
 
     return null;
   })
-  .then(() => {
+
+  const imagePromise = new Promise(resolve => {
     const img = new Image();
     img.src = 'https://api.smotrim.ru/api/v1/pictures/' + props.person.picId + '/bq/redirect';
 
     img.onload = () => {
       personImg.value = img;
-      isLoading.value = false;
+      resolve()
     };
   })
-  .catch((error) => {
-    console.log('Could not fetch person info: \n', error);
 
-    return null;
-  });
+  Promise.all([imagePromise, infoPromise])
+    .then(() => {
+      isLoading.value = false;
+
+      return null;
+    })
+    .catch((error) => {
+      console.log('Could not fetch person info: \n', error);
+
+      return null;
+    })
 })
 </script>
 <template>
